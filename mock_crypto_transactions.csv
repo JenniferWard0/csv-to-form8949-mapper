@@ -1,0 +1,8 @@
+date_acquired,date_sold,asset,quantity,proceeds,cost_basis,gain_loss,description,transaction_type,exchange
+2021-01-15,2022-03-20,BTC,0.5,22000,15000,7000,Sold 0.5 BTC,Sell,Coinbase
+2021-06-10,2022-02-11,ETH,2.0,4800,3800,1000,Sold 2 ETH,Sell,Binance
+2020-12-01,2021-08-05,BTC,0.25,12500,8750,3750,Sold 0.25 BTC,Sell,Kraken
+2022-01-01,2022-06-01,ADA,1000.0,450,600,-150,Sold 1000 ADA,Sell,Crypto.com
+2021-09-20,2022-09-21,SOL,20.0,600,800,-200,Sold 20 SOL,Sell,Coinbase
+2022-02-15,2022-10-10,ETH,1.0,1800,2000,-200,Sold 1 ETH,Sell,MetaMask
+2021-05-05,2023-01-05,DOGE,5000.0,400,250,150,Sold 5000 DOGE,Sell,Binance

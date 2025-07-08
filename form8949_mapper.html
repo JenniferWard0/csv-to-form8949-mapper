@@ -1,0 +1,911 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Form 8949 CSV Mapper</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            font-weight: 300;
+        }
+
+        .header p {
+            opacity: 0.9;
+            font-size: 1.1rem;
+        }
+
+        .content {
+            padding: 40px;
+        }
+
+        .step {
+            margin-bottom: 40px;
+            padding: 30px;
+            background: #f8f9fa;
+            border-radius: 15px;
+            border-left: 5px solid #667eea;
+        }
+
+        .step h2 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+        }
+
+        .step-number {
+            background: #667eea;
+            color: white;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 15px;
+            font-weight: bold;
+        }
+
+        .file-upload {
+            position: relative;
+            display: inline-block;
+            margin-bottom: 20px;
+        }
+
+        .file-upload input[type="file"] {
+            position: absolute;
+            opacity: 0;
+            width: 100%;
+            height: 100%;
+            cursor: pointer;
+        }
+
+        .file-upload-label {
+            display: inline-block;
+            padding: 15px 30px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+
+        .file-upload-label:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .file-info {
+            background: #e8f5e8;
+            border: 1px solid #c3e6c3;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 15px;
+            color: #2d5a2d;
+        }
+
+        .mapping-section {
+            display: none;
+        }
+
+        .mapping-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-top: 20px;
+        }
+
+        .mapping-item {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            border: 1px solid #e0e0e0;
+            transition: all 0.3s ease;
+        }
+
+        .mapping-item:hover {
+            border-color: #667eea;
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.1);
+        }
+
+        .template-header {
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 10px;
+            padding: 10px;
+            background: #f1f3f4;
+            border-radius: 5px;
+        }
+
+        select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+            background: white;
+            transition: border-color 0.3s ease;
+        }
+
+        select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .preview-section {
+            display: none;
+            margin-top: 30px;
+        }
+
+        .preview-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .preview-table th,
+        .preview-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .preview-table th {
+            background: #667eea;
+            color: white;
+            font-weight: 500;
+        }
+
+        .preview-table tr:hover {
+            background: #f8f9fa;
+        }
+
+        .btn {
+            padding: 15px 30px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            margin: 10px 10px 10px 0;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #56ab2f 0%, #a8e6cf 100%);
+            color: white;
+        }
+
+        .btn-success:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(86, 171, 47, 0.3);
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 6px;
+            background: #e0e0e0;
+            border-radius: 3px;
+            margin: 20px 0;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 3px;
+            transition: width 0.3s ease;
+        }
+
+        .error {
+            background: #ffe6e6;
+            border: 1px solid #ffcccc;
+            color: #cc0000;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 15px 0;
+        }
+
+        .success {
+            background: #e6ffe6;
+            border: 1px solid #ccffcc;
+            color: #006600;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 15px 0;
+        }
+
+        .info-box {
+            background: #e3f2fd;
+            border: 1px solid #bbdefb;
+            color: #1565c0;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 15px 0;
+        }
+
+        @media (max-width: 768px) {
+            .mapping-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .content {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Form 8949 CSV Mapper</h1>
+            <p>Upload your CSV or Excel file and map it to the Form 8949 template format</p>
+        </div>
+
+        <div class="content">
+            <!-- Step 1: File Upload -->
+            <div class="step" id="step1">
+                <h2><span class="step-number">1</span>Upload Your Data File</h2>
+                <p style="margin-bottom: 20px;">Upload a CSV file (.csv) or Excel file (.xlsx, .xls) containing your transaction data:</p>
+                <div class="file-upload">
+                    <input type="file" id="dataFile" accept=".csv,.xlsx,.xls" />
+                    <label for="dataFile" class="file-upload-label">
+                        Choose CSV or Excel File
+                    </label>
+                </div>
+                <div id="fileInfo" class="file-info" style="display: none;"></div>
+
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill" style="width: 0%;"></div>
+                </div>
+            </div>
+
+            <!-- Step 2: Header Mapping -->
+            <div class="step mapping-section" id="step2">
+                <h2><span class="step-number">2</span>Map Your Headers to Form 8949 Template</h2>
+                <p>Select which column from your CSV file corresponds to each Form 8949 field:</p>
+                
+                <div class="mapping-container" id="mappingContainer">
+                    <!-- Mapping items will be generated here -->
+                </div>
+                
+                <button class="btn btn-primary" id="generatePreview">Generate Preview</button>
+            </div>
+
+            <!-- Step 3: Preview and Download -->
+            <div class="step preview-section" id="step3">
+                <h2><span class="step-number">3</span>Preview and Download</h2>
+                <p>Review the mapped data before downloading:</p>
+                
+                <div id="previewContainer">
+                    <!-- Preview table will be generated here -->
+                </div>
+                
+                <button class="btn btn-success" id="downloadFile">Download Form 8949 Excel File</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Form 8949 template headers
+        const templateHeaders = [
+            'Date Sold',
+            'Date Acquired', 
+            'Crypto Name',
+            '# Units',
+            'Cost Basis',
+            'Sale Price',
+            'Gain/Loss',
+            'ST/LT'
+        ];
+
+        // Define which columns should be formatted as numbers
+        const numericColumns = ['# Units', 'Cost Basis', 'Sale Price', 'Gain/Loss'];
+
+        let fileData = [];
+        let fileHeaders = [];
+        let mappedData = [];
+        let currentFile = null;
+
+        // File upload handler
+        document.getElementById('dataFile').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                currentFile = file;
+                parseFile(file);
+            }
+        });
+
+        function parseFile(file) {
+            const fileInfo = document.getElementById('fileInfo');
+            const fileExtension = file.name.split('.').pop().toLowerCase();
+            
+            fileInfo.innerHTML = `<strong>File:</strong> ${file.name} (${(file.size / 1024).toFixed(2)} KB)`;
+            fileInfo.style.display = 'block';
+
+            if (fileExtension === 'csv') {
+                parseCSV(file);
+            } else if (fileExtension === 'xlsx' || fileExtension === 'xls') {
+                parseExcel(file);
+            } else {
+                showError('Unsupported file format. Please upload a CSV (.csv) or Excel (.xlsx, .xls) file.');
+            }
+        }
+
+        function parseCSV(file) {
+            Papa.parse(file, {
+                header: true,
+                dynamicTyping: true,
+                skipEmptyLines: true,
+                delimitersToGuess: [',', '\t', '|', ';'],
+                complete: function(results) {
+                    if (results.errors.length > 0) {
+                        showError('Error parsing CSV: ' + results.errors[0].message);
+                        return;
+                    }
+
+                    fileData = results.data.filter(row => {
+                        // Filter out completely empty rows
+                        return Object.values(row).some(value => 
+                            value !== null && value !== undefined && value !== '' && value !== 0
+                        );
+                    }).map(row => {
+                        const processedRow = {};
+                        Object.keys(row).forEach(key => {
+                            let value = row[key];
+                            // Check if this looks like a date field and process it
+                            if (typeof value === 'string' && (value.includes('/') || value.includes('-'))) {
+                                value = parseCSVDate(value);
+                            }
+                            processedRow[key.trim()] = value;
+                        });
+                        return processedRow;
+                    });
+                    fileHeaders = Object.keys(fileData[0] || {}).map(header => header.trim()).filter(header => header !== '');
+                    
+                    if (fileHeaders.length === 0 || fileData.length === 0) {
+                        showError('No valid data found in CSV file. Please check that your file has headers and data rows.');
+                        return;
+                    }
+
+                    console.log('CSV parsed successfully:', {
+                        headers: fileHeaders,
+                        dataRows: fileData.length,
+                        sampleRow: fileData[0]
+                    });
+
+                    updateProgress(33);
+                    generateMappingSection();
+                    showStep2();
+                },
+                error: function(error) {
+                    showError('Failed to parse CSV: ' + error.message);
+                }
+            });
+        }
+
+        function parseExcel(file) {
+            const reader = new FileReader();
+            
+            reader.onload = function(e) {
+                try {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, { 
+                        type: 'array',
+                        cellDates: true,
+                        cellNF: false,
+                        cellText: false
+                    });
+                    
+                    // Get the first sheet
+                    const firstSheetName = workbook.SheetNames[0];
+                    const worksheet = workbook.Sheets[firstSheetName];
+                    
+                    // Convert to JSON with headers
+                    const jsonData = XLSX.utils.sheet_to_json(worksheet, {
+                        header: 1,
+                        defval: "",
+                        blankrows: false,
+                        raw: false,
+                        dateNF: 'M/D/YYYY'
+                    });
+                    
+                    if (jsonData.length < 2) {
+                        showError('Excel file must contain at least a header row and one data row');
+                        return;
+                    }
+                    
+                    // First row contains headers
+                    const headers = jsonData[0].map(header => 
+                        (header || '').toString().trim()
+                    ).filter(header => header !== '');
+                    
+                    if (headers.length === 0) {
+                        showError('No valid headers found in Excel file');
+                        return;
+                    }
+                    
+                    // Convert remaining rows to objects
+                    const dataRows = jsonData.slice(1);
+                    fileData = dataRows.map(row => {
+                        const obj = {};
+                        headers.forEach((header, index) => {
+                            let value = row[index] || '';
+                            
+                            // Handle date formatting for Excel
+                            if (value instanceof Date) {
+                                value = formatDate(value);
+                            } else if (typeof value === 'number' && value > 40000 && value < 50000) {
+                                // Excel serial date number (approximate range for 2009-2037)
+                                const excelDate = XLSX.SSF.parse_date_code(value);
+                                if (excelDate) {
+                                    const jsDate = new Date(excelDate.y, excelDate.m - 1, excelDate.d);
+                                    value = formatDate(jsDate);
+                                }
+                            }
+                            
+                            obj[header] = value;
+                        });
+                        return obj;
+                    }).filter(row => {
+                        // Filter out completely empty rows
+                        return Object.values(row).some(value => 
+                            value !== null && value !== undefined && value !== ''
+                        );
+                    });
+                    
+                    fileHeaders = headers;
+                    
+                    if (fileData.length === 0) {
+                        showError('No data rows found in Excel file');
+                        return;
+                    }
+                    
+                    updateProgress(33);
+                    generateMappingSection();
+                    showStep2();
+                    
+                } catch (error) {
+                    showError('Failed to parse Excel file: ' + error.message);
+                }
+            };
+            
+            reader.onerror = function() {
+                showError('Failed to read Excel file');
+            };
+            
+            reader.readAsArrayBuffer(file);
+        }
+
+        function formatDate(date) {
+            if (!date || !(date instanceof Date) || isNaN(date.getTime())) {
+                return '';
+            }
+            
+            const month = date.getMonth() + 1;
+            const day = date.getDate();
+            const year = date.getFullYear();
+            
+            return `${month}/${day}/${year}`;
+        }
+
+        function parseCSVDate(dateString) {
+            if (!dateString || typeof dateString !== 'string') {
+                return dateString;
+            }
+            
+            // Try to parse common date formats and convert to M/D/YYYY
+            const datePatterns = [
+                /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/,  // M/D/YYYY or MM/DD/YYYY
+                /^(\d{4})-(\d{1,2})-(\d{1,2})$/,   // YYYY-M-D or YYYY-MM-DD
+                /^(\d{1,2})-(\d{1,2})-(\d{4})$/,   // M-D-YYYY or MM-DD-YYYY
+            ];
+            
+            // Check if it's already in M/D/YYYY format
+            const usFormat = datePatterns[0].exec(dateString);
+            if (usFormat) {
+                return dateString; // Already in correct format
+            }
+            
+            // Check ISO format (YYYY-MM-DD)
+            const isoFormat = datePatterns[1].exec(dateString);
+            if (isoFormat) {
+                const [, year, month, day] = isoFormat;
+                return `${parseInt(month)}/${parseInt(day)}/${year}`;
+            }
+            
+            // Check MM-DD-YYYY format
+            const dashFormat = datePatterns[2].exec(dateString);
+            if (dashFormat) {
+                const [, month, day, year] = dashFormat;
+                return `${parseInt(month)}/${parseInt(day)}/${year}`;
+            }
+            
+            // If no pattern matches, return as-is
+            return dateString;
+        }
+
+        function generateMappingSection() {
+            const container = document.getElementById('mappingContainer');
+            container.innerHTML = '';
+
+            templateHeaders.forEach(templateHeader => {
+                const mappingItem = document.createElement('div');
+                mappingItem.className = 'mapping-item';
+                
+                const headerDiv = document.createElement('div');
+                headerDiv.className = 'template-header';
+                headerDiv.textContent = templateHeader;
+                
+                // Special handling for Date Acquired
+                if (templateHeader === 'Date Acquired') {
+                    const infoDiv = document.createElement('div');
+                    infoDiv.style.padding = '10px';
+                    infoDiv.style.background = '#e3f2fd';
+                    infoDiv.style.borderRadius = '5px';
+                    infoDiv.style.color = '#1565c0';
+                    infoDiv.style.fontSize = '14px';
+                    infoDiv.innerHTML = '<strong>Auto-filled:</strong> Will be set to "Various" for all rows';
+                    
+                    mappingItem.appendChild(headerDiv);
+                    mappingItem.appendChild(infoDiv);
+                } else {
+                    const select = document.createElement('select');
+                    select.id = `map_${templateHeader.replace(/[^a-zA-Z0-9]/g, '_')}`;
+                    
+                    // Add default option
+                    const defaultOption = document.createElement('option');
+                    defaultOption.value = '';
+                    defaultOption.textContent = '-- Select Column --';
+                    select.appendChild(defaultOption);
+                    
+                    // Add file headers as options
+                    fileHeaders.forEach(csvHeader => {
+                        const option = document.createElement('option');
+                        option.value = csvHeader;
+                        option.textContent = csvHeader;
+                        
+                        // Auto-select if there's a close match
+                        if (isCloseMatch(templateHeader, csvHeader)) {
+                            option.selected = true;
+                        }
+                        
+                        select.appendChild(option);
+                    });
+                    
+                    mappingItem.appendChild(headerDiv);
+                    mappingItem.appendChild(select);
+                }
+                
+                container.appendChild(mappingItem);
+            });
+        }
+
+        function isCloseMatch(templateHeader, csvHeader) {
+            const template = templateHeader.toLowerCase().replace(/[^a-z]/g, '');
+            const csv = csvHeader.toLowerCase().replace(/[^a-z]/g, '');
+            
+            // Exact match after cleaning
+            if (template === csv) return true;
+            
+            // Check if one contains the other
+            if (template.includes(csv) || csv.includes(template)) return true;
+            
+            // Specific matching rules
+            const matchRules = {
+                'datesold': ['sold', 'sale', 'dispose'],
+                'dateacquired': ['acquired', 'purchase', 'bought', 'buy'],
+                'cryptoname': ['name', 'symbol', 'asset', 'crypto', 'coin'],
+                'units': ['units', 'quantity', 'amount', 'qty'],
+                'costbasis': ['cost', 'basis', 'purchase'],
+                'saleprice': ['sale', 'sold', 'price'],
+                'gainloss': ['gain', 'loss', 'profit'],
+                'stlt': ['term', 'short', 'long', 'st', 'lt']
+            };
+            
+            const rule = matchRules[template];
+            if (rule) {
+                return rule.some(keyword => csv.includes(keyword));
+            }
+            
+            return false;
+        }
+
+        function showStep2() {
+            document.querySelector('.mapping-section').style.display = 'block';
+        }
+
+        function showStep3() {
+            document.querySelector('.preview-section').style.display = 'block';
+        }
+
+        document.getElementById('generatePreview').addEventListener('click', function() {
+            generateMappedData();
+            generatePreview();
+            updateProgress(66);
+            showStep3();
+        });
+
+        function generateMappedData() {
+            mappedData = [];
+            
+            fileData.forEach(row => {
+                const mappedRow = {};
+                
+                templateHeaders.forEach(templateHeader => {
+                    if (templateHeader === 'Date Acquired') {
+                        // Always set Date Acquired to "Various"
+                        mappedRow[templateHeader] = 'Various';
+                    } else {
+                        const selectId = `map_${templateHeader.replace(/[^a-zA-Z0-9]/g, '_')}`;
+                        const select = document.getElementById(selectId);
+                        const csvColumn = select.value;
+                        
+                        if (csvColumn && row[csvColumn] !== undefined) {
+                            let value = row[csvColumn];
+                            
+                            // Convert numeric columns to numbers for proper Excel formatting
+                            if (numericColumns.includes(templateHeader) && value !== null && value !== '') {
+                                // Try to parse as number, handling parentheses for negative numbers
+                                if (typeof value === 'string') {
+                                    // Remove commas and handle parentheses for negative numbers
+                                    let numStr = value.toString().replace(/,/g, '');
+                                    if (numStr.match(/^\s*\(\s*[\d.]+\s*\)\s*$/)) {
+                                        // Handle (123.45) format - convert to negative
+                                        numStr = '-' + numStr.replace(/[()]/g, '').trim();
+                                    }
+                                    const parsedNum = parseFloat(numStr);
+                                    if (!isNaN(parsedNum)) {
+                                        value = parsedNum;
+                                    }
+                                } else if (typeof value === 'number') {
+                                    value = value; // Keep as number
+                                }
+                            }
+                            
+                            mappedRow[templateHeader] = value;
+                        } else {
+                            mappedRow[templateHeader] = '';
+                        }
+                    }
+                });
+                
+                mappedData.push(mappedRow);
+            });
+        }
+
+        function generatePreview() {
+            const previewContainer = document.getElementById('previewContainer');
+            
+            if (mappedData.length === 0) {
+                previewContainer.innerHTML = '<div class="error">No data to preview</div>';
+                return;
+            }
+            
+            let tableHTML = '<table class="preview-table"><thead><tr>';
+            
+            // Add headers
+            templateHeaders.forEach(header => {
+                tableHTML += `<th>${header}</th>`;
+            });
+            tableHTML += '</tr></thead><tbody>';
+            
+            // Add first 5 rows for preview
+            const previewRows = mappedData.slice(0, 5);
+            previewRows.forEach(row => {
+                tableHTML += '<tr>';
+                templateHeaders.forEach(header => {
+                    let value = row[header] || '';
+                    
+                    // Format numbers for display (showing how they'll appear in Excel)
+                    if (numericColumns.includes(header) && typeof value === 'number') {
+                        if (value < 0) {
+                            value = `(${Math.abs(value).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })})`;
+                        } else {
+                            value = value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                        }
+                    }
+                    
+                    tableHTML += `<td>${value}</td>`;
+                });
+                tableHTML += '</tr>';
+            });
+            
+            tableHTML += '</tbody></table>';
+            
+            if (mappedData.length > 5) {
+                tableHTML += `<p style="margin-top: 15px; color: #666;">Showing first 5 rows of ${mappedData.length} total rows</p>`;
+            }
+            
+            previewContainer.innerHTML = tableHTML;
+        }
+
+        document.getElementById('downloadFile').addEventListener('click', function() {
+            downloadExcelFile();
+            updateProgress(100);
+        });
+
+        function downloadExcelFile() {
+            try {
+                // Create workbook
+                const wb = XLSX.utils.book_new();
+                
+                // Create worksheet data with proper header row
+                const wsData = [];
+                wsData.push(templateHeaders); // Add headers as first row
+                
+                // Add data rows
+                mappedData.forEach(row => {
+                    const dataRow = templateHeaders.map(header => {
+                        let value = row[header];
+                        
+                        // Ensure numeric columns are stored as numbers
+                        if (numericColumns.includes(header) && value !== null && value !== '' && value !== undefined) {
+                            if (typeof value === 'string') {
+                                // Handle potential string numbers
+                                const numValue = parseFloat(value.toString().replace(/,/g, ''));
+                                if (!isNaN(numValue)) {
+                                    value = numValue;
+                                }
+                            }
+                        }
+                        
+                        return value;
+                    });
+                    wsData.push(dataRow);
+                });
+                
+                // Create worksheet from array
+                const ws = XLSX.utils.aoa_to_sheet(wsData);
+                
+                // Apply formatting to numeric columns
+                const range = XLSX.utils.decode_range(ws['!ref']);
+                
+                // Find column indices for numeric fields
+                const headerRow = wsData[0];
+                const numericColIndices = [];
+                numericColumns.forEach(colName => {
+                    const colIndex = headerRow.indexOf(colName);
+                    if (colIndex !== -1) {
+                        numericColIndices.push(colIndex);
+                    }
+                });
+                
+                // Apply number formatting to numeric columns
+                if (!ws['!cols']) ws['!cols'] = [];
+                
+                for (let row = 1; row <= range.e.r; row++) { // Skip header row
+                    numericColIndices.forEach(colIndex => {
+                        const cellAddress = XLSX.utils.encode_cell({r: row, c: colIndex});
+                        if (ws[cellAddress] && typeof ws[cellAddress].v === 'number') {
+                            // Apply number format with parentheses for negatives
+                            ws[cellAddress].z = '#,##0.00_);(#,##0.00)';
+                            // Ensure it's marked as a number
+                            ws[cellAddress].t = 'n';
+                        }
+                    });
+                }
+                
+                // Set column widths for better display
+                ws['!cols'] = templateHeaders.map(header => {
+                    if (numericColumns.includes(header)) {
+                        return { width: 15 };
+                    } else if (header === 'Date Sold' || header === 'Date Acquired') {
+                        return { width: 12 };
+                    } else if (header === 'Crypto Name') {
+                        return { width: 12 };
+                    } else {
+                        return { width: 10 };
+                    }
+                });
+                
+                // Add worksheet to workbook
+                XLSX.utils.book_append_sheet(wb, ws, "Form 8949");
+                
+                // Generate filename with timestamp
+                const timestamp = new Date().toISOString().slice(0, 19).replace(/:/g, '-');
+                const filename = `Form_8949_Template_${timestamp}.xlsx`;
+                
+                // Download file
+                XLSX.writeFile(wb, filename);
+                
+                showSuccess(`File downloaded successfully: ${filename} - Numbers are properly formatted with negatives in parentheses!`);
+                
+            } catch (error) {
+                showError('Failed to generate Excel file: ' + error.message);
+            }
+        }
+
+        function updateProgress(percentage) {
+            document.getElementById('progressFill').style.width = percentage + '%';
+        }
+
+        function showError(message) {
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'error';
+            errorDiv.textContent = message;
+            
+            // Insert after the file upload section
+            const step1 = document.getElementById('step1');
+            step1.appendChild(errorDiv);
+            
+            // Remove after 5 seconds
+            setTimeout(() => {
+                if (errorDiv.parentNode) {
+                    errorDiv.parentNode.removeChild(errorDiv);
+                }
+            }, 5000);
+        }
+
+        function showSuccess(message) {
+            const successDiv = document.createElement('div');
+            successDiv.className = 'success';
+            successDiv.textContent = message;
+            
+            // Insert after the preview section
+            const step3 = document.getElementById('step3');
+            step3.appendChild(successDiv);
+            
+            // Remove after 5 seconds
+            setTimeout(() => {
+                if (successDiv.parentNode) {
+                    successDiv.parentNode.removeChild(successDiv);
+                }
+            }, 5000);
+        }
+    </script>
+</body>
+</html>
