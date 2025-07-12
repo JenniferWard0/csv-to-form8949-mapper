@@ -4,6 +4,16 @@
 
 This project demonstrates how generative AI can be used to rapidly prototype a practical data transformation tool. It allows users to upload a CSV or Excel file of cryptocurrency transactions, map their columns to the required IRS Form 8949 inputs, and generates a downloadable Excel file formatted for capital gains tax reporting. The tool was built through prompt-driven collaboration with Claude (Anthropic AI).
 
+## Demo
+
+[Demo video](demo.mp4)
+
+## Try It
+
+- Download the mock CSV
+- Open the interface demo (locally)
+- Generate an example output
+
 ## Business Context
 
 Cryptocurrency investors often receive transaction history from multiple sources- wallets, exchanges, and platforms-each with its own inconsistent CSV format. Preparing these for IRS Form 8949 typically requires tedious manual cleanup. This project addresses that problem by enabling users to map their CSV headers to standard Form 8949 fields and instantly export a compliant Excel file. It's especially helpful for users with large numbers of transactions, now required to be reported line by line under new tax regulations.
@@ -35,23 +45,29 @@ This project highlights how AI-assisted development can turn clear prompts and s
 - Export a clean Excel file formatted for capital gains reporting
 - Entire tool generated using AI based on prompt engineering
 
-## Technologies Used (via Claude-generated Code)
+## Project Flow
 
-- HTML/CSS/JS for front-end UI
-- Python with pandas and openpyxl for CSV data processing and Excel generation
+The following flowchart outlines how a user interacts with the tool.
+
+![Flow](Flowchart.jpg)
+
+## Technologies Used
+
+- HTML/CSS/JS for front-end UI (via Claude)
+- Python with pandas and openpyxl for CSV data processing and Excel generation (via Claude)
 - Mock crypto transaction data for testing and demonstration
 
 ## Debugging Note
 
-During testing, I encountered an issue where uploaded CSV files weren’t parsing correctly—every row appeared as a single column of text. This was due to improper formatting in the mock data: although saved as .csv, the file lacked proper comma separation and UTF-8 encoding.
+One of the biggest challenges was getting Claude to generate code that matched exactly what I needed. At first, the outputs were too broad and often left out important pieces like form input handling or proper Excel formatting.
 
-To resolve this, I:
+To get better results, I:
 
-- Re-exported the mock file with correct delimiters and encoding
-- Verified that the tool could read it directly, without requiring Excel’s “Text to Columns” step
-- Ensured compatibility with the Python CSV parser used in the Claude-generated code
+- Broke the task into smaller pieces - starting with prompts for the CSV upload logic, then moving onto field mapping and the export step
+- Provided clear examples of the expected inputs and outputs in each prompt
+- Refined prompts by testing the output, identifying gaps, and rephrasing instructions clearly
 
-This improved the reliability of the demo and better reflected how real-world data would be handled in production.
+This process sharpened my ability to guide generative models with clarity and precision, especially when building tools that simulate user interaction and structured data export.
 
 ## Skills Demonstrated
 
